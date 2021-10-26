@@ -1,70 +1,50 @@
-from flask import Blueprint, jsonify
+from app import db
+from app.models.book import Book
+from flask import Blueprint, jsonify, make_response, request
 
-hello_world_bp = Blueprint("hello_world", __name__)
-
-
-@hello_world_bp.route("/hello-world", methods=["GET"])
-def say_hello_world():
-    my_beautiful_response_body = "Hello, World!"
-    return my_beautiful_response_body
-
-
-@hello_world_bp.route("/hello/JSON", methods=["GET"])
-def say_hello_json():
-    return {
-        "name": "Ada Lovelace",
-        "message": "Hello!",
-        "hobbies": ["Fishing", "Swimming", "Watching Reality Shows"]
-    }
-
-
-@hello_world_bp.route("/broken-endpoint-with-broken-server-code")
-def broken_endpoint():
-    response_body = {
-        "name": "Ada Lovelace",
-        "message": "Hello!",
-        "hobbies": ["Fishing", "Swimming", "Watching Reality Shows"]
-    }
-    new_hobby = "Surfing"
-    response_body["hobbies"] + new_hobby
-    return response_body
-
-
-class Book:
-    def __init__(self, id, title, description):
-        self.id = id
-        self.title = title
-        self.description = description
-
-
-books = [
-    Book(1, "Fictional Book Title", "A fantasy novel set in an imaginary world."),
-    Book(2, "Fictional Book Title", "A fantasy novel set in an imaginary world."),
-    Book(3, "Fictional Book Title", "A fantasy novel set in an imaginary world.")
-]
+# books = [
+#     Book(1, "Fictional Book Title", "A fantasy novel set in an imaginary world."),
+#     Book(2, "Fictional Book Title", "A fantasy novel set in an imaginary world."),
+#     Book(3, "Fictional Book Title", "A fantasy novel set in an imaginary world.")
+# ]
 
 books_bp = Blueprint("books", __name__, url_prefix="/books")
 
-
-@books_bp.route("", methods=["GET"])
+@books_bp.route("", methods=["POST", "GET"])
 def handle_books():
-    books_response = []
-    for book in books:
-        books_response.append({
-            "id": book.id,
-            "title": book.title,
-            "description": book.description
-        })
-    return jsonify(books_response)
+    if request.method == 'POST':
+        request_body = request.get_json()
+        new_book = Book(title=request_body["title"],
+                        description=request_body["description"])
+
+        db.session.add(new_book)
+        db.session.commit()
+
+        return make_response(f"Book {new_book.title} successfully created", 201)
+    
+    elif request.method == 'GET':
+        books = Book.query.all()
+        books_response = []
+        for book in books:
+            books_response.append(book.to_dict())
+        return jsonify(books_response)
 
 
-@books_bp.route("/<book_id>", methods=["GET"])
+@books_bp.route("/<book_id>", methods=["GET", "PUT"])
 def handle_book(book_id):
     book_id = int(book_id)
-    for book in books:
-        if book.id == book_id:
-            return {
-                "id": book.id,
-                "title": book.title,
-                "description": book.description
-            }
+    book = Book.query.get(book_id)
+
+    if request.method == "GET":
+        return book.to_dict()
+
+    elif request.method == "PUT":
+        form_data = request.get_json()
+
+        book.title = form_data["title"]
+        book.description = form_data["description"]
+
+        db.session.commit()
+
+        return make_response(f"Book #{book.id} successfully updated")
+    
