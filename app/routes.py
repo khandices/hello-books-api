@@ -30,7 +30,7 @@ def handle_books():
         return jsonify(books_response)
 
 
-@books_bp.route("/<book_id>", methods=["GET", "PUT"])
+@books_bp.route("/<book_id>", methods=["GET", "PUT", "DELETE"])
 def handle_book(book_id):
     book_id = int(book_id)
     book = Book.query.get(book_id)
@@ -43,8 +43,11 @@ def handle_book(book_id):
 
         book.title = form_data["title"]
         book.description = form_data["description"]
-
         db.session.commit()
-
         return make_response(f"Book #{book.id} successfully updated")
+    
+    elif request.method == "DELETE":
+        db.session.delete(book)
+        db.session.commit()
+        return make_response(f"Book #{book.id} successfully deleted")
     
