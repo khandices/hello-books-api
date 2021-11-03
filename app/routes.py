@@ -28,7 +28,7 @@ def handle_books():
 def handle_book(book_id):
     book_id = int(book_id)
     book = Book.query.get(book_id)
-    if book is None:
+    if book == None:
         return make_response("", 404)
         
     if request.method == "GET":
