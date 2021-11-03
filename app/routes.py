@@ -4,6 +4,20 @@ from flask import Blueprint, jsonify, make_response, request
 
 books_bp = Blueprint("books", __name__, url_prefix="/books")
 
+def is_input_valid(model_id):
+    try:
+        int(model_id)
+    except:
+        return make_response(f"{model_id} is not an int!", 400)
+
+
+def is_parameter_found(model, parameter_id):
+    if is_input_valid(parameter_id):
+        return is_input_valid(parameter_id)
+    elif model.query.get(parameter_id) is None:
+        return make_response(f"Book '{parameter_id}' was not found!", 404)
+
+
 @books_bp.route("", methods=["POST"])
 def create_book():
     request_body = request.get_json()
@@ -13,7 +27,7 @@ def create_book():
     db.session.add(new_book)
     db.session.commit()
 
-    return make_response(f"Book {new_book.title} successfully created", 201)
+    return make_response(f"Book '{new_book.title}' successfully created!", 201)
     
 
 @books_bp.route("", methods=["GET"])
@@ -27,37 +41,38 @@ def read_books():
 
 @books_bp.route("/<book_id>", methods=["GET"])
 def read_book(book_id):
+    valid_data = is_parameter_found(Book, book_id)
+    if valid_data:
+        return valid_data
+
     book_id = int(book_id)
     book = Book.query.get(book_id)
-
-    if book == None:
-        return make_response("", 404)
-    
     return book.to_dict()
 
 
 @books_bp.route("/<book_id>", methods=["PUT"])
 def update_book(book_id):
+        valid_data = is_parameter_found(Book, book_id)
+        if valid_data:
+            return valid_data
         form_data = request.get_json()
         book_id = int(book_id)
         book = Book.query.get(book_id)
 
-        if book == None:
-            return make_response("", 404)
-
         book.title = form_data["title"]
         book.description = form_data["description"]
+
         db.session.commit()
         return make_response(f"Book #{book.id} successfully updated")
     
 
 @books_bp.route("/<book_id>", methods=["DELETE"])
 def delete_book(book_id):
+        valid_data = is_parameter_found(Book, book_id)
+        if valid_data:
+            return valid_data
         book_id = int(book_id)
         book = Book.query.get(book_id)
-
-        if book == None:
-            return make_response("", 404)
 
         db.session.delete(book)
         db.session.commit()
