@@ -72,13 +72,14 @@ def update_book(book_id):
         return make_response(f"Book #{book.id} successfully updated")
 
 
-@books_bp.route("/books/<book_id>/assign_genres", methods=["PATCH"])
+@books_bp.route("/<book_id>/assign_genres", methods=["PATCH"])
 def assign_genres(book_id):
     valid_data = is_parameter_found(Book, book_id)
     if valid_data:
         return valid_data
     book = Book.query.get(book_id)
     request_body = request.get_json()
+
     for id in request_body["genres"]:
         book.genres.append(Genre.query.get(id))
 
