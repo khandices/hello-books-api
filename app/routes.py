@@ -1,6 +1,7 @@
 from app import db
 from app.models.book import Book
 from app.models.author import Author
+from app.models.genre import Genre
 from flask import Blueprint, jsonify, make_response, request
 
 books_bp = Blueprint("books", __name__, url_prefix="/books")
@@ -18,8 +19,11 @@ def is_parameter_found(model, parameter_id):
     if is_input_valid(parameter_id):
         return is_input_valid(parameter_id)
     elif model.query.get(parameter_id) is None:
-        return make_response(f"{model} '{parameter_id}' was not found!", 404)
+        return make_response(f"'{parameter_id}' was not found!", 404)
 
+
+
+# BOOKS ENDPOINTS
 
 @books_bp.route("", methods=["POST"])
 def create_book():
@@ -32,8 +36,6 @@ def create_book():
 
     return make_response(f"Book '{new_book.title}' successfully created!", 201)
     
-
-#  BOOKS ENDPOINTS
 
 @books_bp.route("", methods=["GET"])
 def read_books():
@@ -50,7 +52,6 @@ def read_book(book_id):
     if valid_data:
         return valid_data
 
-    book_id = int(book_id)
     book = Book.query.get(book_id)
     return book.to_dict()
 
@@ -83,6 +84,7 @@ def delete_book(book_id):
         db.session.commit()
         return make_response(f"Book #{book.id} successfully deleted")
     
+
 
 
 # AUTHORS ENDPOINTS
@@ -141,3 +143,40 @@ def read_authors_books(author_id):
             }
         )
     return jsonify(books_response)
+
+
+#  GENRES ENDPOINTS
+
+@genres_bp.route("", methods=["GET"])
+def read_genres():
+    genres = Genre.query.all()
+    genres_response = []
+
+    for genre in genres:
+        genres_response.append(genre.to_dict())
+    return jsonify(genres_response)
+
+
+@genres_bp.route("", methods=["POST"])
+def create_genre():
+    request_body = request.get_json()
+    new_genre = Genre(name=request_body["name"])
+                    
+    db.session.add(new_genre)
+    db.session.commit()
+
+    return make_response(f"Book '{new_genre.name}' successfully created!", 201)
+
+
+
+@genres_bp.route("/<genre_id>", methods=["GET"])
+def read_genre(genre_id):
+    valid_data = is_parameter_found(Genre, genre_id)
+    if valid_data:
+        return valid_data
+
+    genre = Genre.query.get(genre_id)
+    return genre.to_dict()
+
+
+
