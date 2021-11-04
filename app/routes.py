@@ -61,16 +61,32 @@ def update_book(book_id):
         valid_data = is_parameter_found(Book, book_id)
         if valid_data:
             return valid_data
-        form_data = request.get_json()
+        request_body = request.get_json()
         book_id = int(book_id)
         book = Book.query.get(book_id)
 
-        book.title = form_data["title"]
-        book.description = form_data["description"]
+        book.title = request_body["title"]
+        book.description = request_body["description"]
 
         db.session.commit()
         return make_response(f"Book #{book.id} successfully updated")
+
+
+@books_bp.route("/books/<book_id>/assign_genres", methods=["PATCH"])
+def assign_genres(book_id):
+    valid_data = is_parameter_found(Book, book_id)
+    if valid_data:
+        return valid_data
+    book = Book.query.get(book_id)
+    request_body = request.get_json()
+    for id in request_body["genres"]:
+        book.genres.append(Genre.query.get(id))
+
+    db.session.commit()
+    return make_response("Genres successfully added", 200)
     
+    
+
 
 @books_bp.route("/<book_id>", methods=["DELETE"])
 def delete_book(book_id):

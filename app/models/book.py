@@ -10,10 +10,21 @@ class Book(db.Model):
     genres = db.relationship("Genre", secondary="books_genres", backref="books")
 
     def to_dict(self):
+        genres = []
+        for genre in self.genres:
+            genres.append(genre.name)
+
+        if self.author:
+            author = self.author.name
+        else:
+            author = None
+
         return {
             "id": self.id,
             "title": self.title,
-            "description": self.description
-        }
+            "description": self.description,
+            "genres": genres,
+            "author": author
+    }
 
     
