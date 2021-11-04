@@ -5,6 +5,7 @@ from flask import Blueprint, jsonify, make_response, request
 
 books_bp = Blueprint("books", __name__, url_prefix="/books")
 authors_bp = Blueprint("authors", __name__, url_prefix="/authors")
+genres_bp = Blueprint("genres", __name__, url_prefix="/genres")
 
 def is_input_valid(model_id):
     try:
