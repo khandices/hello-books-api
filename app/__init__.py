@@ -33,6 +33,7 @@ def create_app(test_config=None):
     from app.models.book import Book
     from app.models.author import Author
     from app.models.genre import Genre
+    from app.models.bookgenre import BookGenre
 
     # Registers the routes and bluepreint to the app
     from .routes import books_bp, authors_bp, genres_bp
