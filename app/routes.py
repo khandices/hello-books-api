@@ -17,7 +17,7 @@ def is_parameter_found(model, parameter_id):
     if is_input_valid(parameter_id):
         return is_input_valid(parameter_id)
     elif model.query.get(parameter_id) is None:
-        return make_response(f"Book '{parameter_id}' was not found!", 404)
+        return make_response(f"{model} '{parameter_id}' was not found!", 404)
 
 
 @books_bp.route("", methods=["POST"])
@@ -83,6 +83,7 @@ def delete_book(book_id):
         return make_response(f"Book #{book.id} successfully deleted")
     
 
+
 # AUTHORS ENDPOINTS
 
 @authors_bp.route("", methods=["GET"])
@@ -103,3 +104,39 @@ def create_author():
     db.session.commit()
 
     return make_response(f"Author '{new_author.name}' successfully created!", 201)
+
+
+@authors_bp.route("/<author_id>/books", methods=["POST"])
+def create_authors_books(author_id):
+    valid_data = is_parameter_found(Author, author_id)
+    if valid_data:
+        return valid_data
+    author = Author.query.get(author_id)
+    request_body = request.get_json()
+    new_book = Book(
+        title=request_body["title"],
+        description=request_body["description"],
+        author=author
+    )
+
+    db.session.add(new_book)
+    db.session.commit()
+    return make_response(f"Book '{new_book.title}' by {new_book.author.name} successfully created", 201)
+
+
+@authors_bp.route("/<author_id>/books", methods=["GET"])
+def read_authors_books(author_id):
+    valid_data = is_parameter_found(Author, author_id)
+    if valid_data:
+        return valid_data
+    author = Author.query.get(author_id)
+    books_response = []
+    for book in author.books:
+        books_response.append(
+            {
+                "id": book.id,
+                "title": book.title,
+                "description": book.description
+            }
+        )
+    return jsonify(books_response)
